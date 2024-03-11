@@ -1,37 +1,40 @@
 const express = require('express');
-const User = require('../models/schema');
 const Cars = require('../models/schema')
-const Dealership = require('../models/schema')
+const User = require('../models/UserSchema')
+const Dealership = require('../models/DealerShipSchema');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 
 router.post('/user/signup',async(req,res)=>{
-    const {user_id,email,password,user_location} = req.body;
-    if(!email || !user_id || !password){
+    const {user_id,user_email,password,user_location,name} = req.body;
+
+    if(!user_email || !user_id || !password){
         res.status(400).send({message:"Please fill all the details"});
     }
 
-    const existingUser = await User.findOne({email});
+    const existingUser = await User.findOne({user_email});
     if(existingUser){
         return res.status(401).send({message:"User aleady exits with that email!"});
     }
   // password hased 
     const hasedPassword = await bcrypt.hash(password,10);
     const newUser = new User({
-        user_email:email,
+        user_email:user_email,
+        name,
         user_id:user_id,
         password:hasedPassword,
         user_location:user_location
     });
     
     newUser.save();
-    res.status(200).send({message: newUser});
+    return res.status(200).send({message: newUser});
 });
 router.post('/user/login',async(req,res)=>{
     try {
         const {email,password} = req.body;
-        const existingUser = await User.findOne({email});
+        const existingUser = await User.findOne({user_email:email});
+
         if(!existingUser){
             return res.status(401).send({message:"Invalid email"});
         }

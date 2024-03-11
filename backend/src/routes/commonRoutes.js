@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const Cars = require('../models/schema');
 
 router.get('/cars',async(req,res)=>{
     try {
@@ -94,3 +95,4 @@ router.get('/api/dealerships/:dealershipId/deals', async (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
     }
 });
+module.exports = router;

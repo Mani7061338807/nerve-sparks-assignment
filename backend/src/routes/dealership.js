@@ -1,9 +1,12 @@
 const express = require('express');
-const Dealership = require('../models/schema');
+const Dealership = require('../models/DealerShipSchema');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const router = express.Router();
 
 router.post('/dealership/signup',async(req,res)=>{
-    const {dealership_email,dealership_id,dealership_name,password,dealership_location} = req.body;
+    const {dealership_email,dealership_id,name,password,Location} = req.body;
+
     if(!dealership_email || !dealership_id || !password){
         res.status(400).send({message:"Please fill all the details"});
     }
@@ -18,27 +21,28 @@ router.post('/dealership/signup',async(req,res)=>{
         dealership_email:dealership_email,
         dealership_id:dealership_id,
         password:hasedPassword,
-        dealership_location:dealership_location,
-        dealership_name:dealership_name
+        dealership_location:Location,
+        name:name
     });
     
     newUser.save();
-    res.status(200).send({message: newUser});
+    return res.status(200).send({message: newUser});
 });
 router.post('/dealership/login',async(req,res)=>{
     try {
-        const {dealership_email,password} = req.body;
-        const existingDealer = await Dealership.findOne({dealership_email});
+        const {email,password} = req.body;
+        const existingDealer = await Dealership.findOne({dealership_email:email});
+
         if(!existingDealer){
             return res.status(401).send({message:"Invalid email"});
         }
-        const isMachedPass = await bcrypt.compare(password,existingUser.password);
+        const isMachedPass = await bcrypt.compare(password,existingDealer.password);
         if(!isMachedPass){
             return res.status(401).send({message:"Invalid  password!"});
         }
         //create token 
         const token = jwt.sign({
-            data: existingUser._id
+            data: existingDealer._id
           }, 'majdjsajdh', { expiresIn: '1d' });
           
           res.cookie('token', token, {
@@ -46,7 +50,7 @@ router.post('/dealership/login',async(req,res)=>{
             httpOnly: true, // HTTP only, to prevent JavaScript access
             secure: process.env.NODE_ENV === 'production', // Only send cookies over HTTPS in production
           });
-        return res.status(200).send({message:"succefully logged in",token:token,user:existingUser});
+        return res.status(200).send({message:"succefully logged in",token:token,user:existingDealer});
       } catch (error) {
         console.log("something went worng")
       }
